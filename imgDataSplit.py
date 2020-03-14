@@ -4,15 +4,15 @@ import os
 from PIL import Image,ImageDraw
 import czhUtils
 # import torch
-import torch.utils.data as data
+# import torch.utils.data as data
 # import torch.nn.functional as F
 import multiprocessing as mp
 from natsort import natsorted
 from tqdm import tqdm
-class CzhSideWalkCOCODataset(data.Dataset):
-    def __init__(self):
-        # super.__init__()
-        pass
+# class CzhSideWalkCOCODataset(data.Dataset):
+#     def __init__(self):
+#         # super.__init__()
+#         pass
 
 #
 class tiffCropandMerge():
@@ -433,11 +433,11 @@ if __name__ == "__main__":
     # tcm.cropImage("F:\\2019\\NewYorkCity_sidewalks\\Images\\0.TIF","test1",913316.0,125170.0,512,512,[1,2,3,4]) #125170-512
     # tcmImage.cropImages_mp(256, 256, 10, Process_cnt=5)
 
-    outputImageDirectory = r'I:\DVRPC\COCO\Image\Test\yolact\merged'
+    outputImageDirectory = r'I:\DVRPC\COCO\Label\Test2'
     if not czhUtils.os.path.exists(outputImageDirectory):
         czhUtils.os.makedirs(outputImageDirectory)
     #
-    tcmImage = tiffCropandMerge(r"I:\DVRPC\COCO\Image\Test\yolact", outputImageDirectory)
-    # tcmImage.cropImages_mp(256, 256, 0, Process_cnt=10)
+    tcmImage = tiffCropandMerge(r"I:\DVRPC\vector\labels\Selected_500\Test", outputImageDirectory)
+    tcmImage.cropImages_mp(256, 256, 0, Process_cnt=1)
     # print(tcmImage.inputPath)
-    tcmImage.mergeImages(tcmImage.inputPath, tcmImage.outputPath, 256, 256, 5000, 5000, 0)
+    # tcmImage.mergeImages(tcmImage.inputPath, tcmImage.outputPath, 256, 256, 5000, 5000, 0)
