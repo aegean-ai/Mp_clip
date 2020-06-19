@@ -344,7 +344,9 @@ class czhTiff2Json():
         return annotation_info
 
 
+
+
 # test = czhTiff2Json("D:\\2019\\njit learning\\201909\\sidewalk extract\\czhSidewalkExtract\\val\\label","D:\\2019\\njit learning\\201909\\sidewalk extract\\czhSidewalkExtract\\val\\images\\","D:\\2019\\njit learning\\201909\\sidewalk extract\\czhSidewalkExtract\\val\\label\\sidewalk_val.json")
-# test = czhTiff2Json(r"I:\DVRPC\COCO\Label\Test", r"I:\DVRPC\COCO\Image\Test", r"I:\DVRPC\COCO\DVRPC_test.json")
+test = czhTiff2Json(r"L:\Datasets\AIRS\val\labels", r"L:\Datasets\AIRS\val\images", r"L:\Datasets\AIRS\val\AIRS_val.json")
 # test.createJson()
 

@@ -3,6 +3,16 @@ import math
 import os
 from PIL import Image,ImageDraw
 import czhUtils
+
+from PIL import Image
+import glob
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+from skimage import io
+from skimage.color import rgb2gray
+import os
+
 # import torch
 # import torch.utils.data as data
 # import torch.nn.functional as F
@@ -14,15 +24,22 @@ from tqdm import tqdm
 #         # super.__init__()
 #         pass
 
+SAVED_IMAGE_FORMAT = "JPG"
+
 #
 class tiffCropandMerge():
     """
     reference to : http://karthur.org/2015/clipping-rasters-in-python.html
     """
-    def __init__(self,inputPath,outputPath):
+
+
+
+    def __init__(self,inputPath,outputPath, format="JPG"):
         self.inputPath = inputPath
         self.outputPath = outputPath
         self.imgFiles = []
+
+        self.SAVED_IMAGE_FORMAT = format.upper()
 
     def setOutputPath(self,outputPath):
         self.outputPath = outputPath
@@ -186,6 +203,8 @@ class tiffCropandMerge():
         return clip,pixel_ul_x,pixel_ul_y,geoTrans2
 
     def saveCropImage(self,rasters,clip,rasterOutputPath,pixel_ul_x,pixel_ul_y,geoTran=None):#rasterInputPath
+
+
         # gtiffDriver = czhUtils.gdal.GetDriverByName('GTiff')
         # if gtiffDriver is None:
         #     raise ValueError("Can't find GeoTiff Driver")
@@ -197,8 +216,11 @@ class tiffCropandMerge():
         if geoTran is not None:
             ds.SetGeoTransform(geoTran)
         #prototyp can by dataset or str format
-        rastersFilepath = rasterOutputPath +".tif"
-        rastersTfwFile= rasterOutputPath +".tfw"
+        rastersFilepath = rasterOutputPath + "." + self.SAVED_IMAGE_FORMAT
+        rastersTfwFile= rasterOutputPath + "." + self.SAVED_IMAGE_FORMAT[0] + self.SAVED_IMAGE_FORMAT[-1] +  "W"
+
+        # print("rastersFilepath: ", rastersFilepath)
+        # print("rastersTfwFile: ", rastersTfwFile)
 
         if czhUtils.os.path.exists(rastersFilepath):
             czhUtils.os.remove(rastersFilepath)
@@ -207,7 +229,13 @@ class tiffCropandMerge():
             czhUtils.os.remove(rastersTfwFile)
 
         # czhUtils.gdalnumeric.SaveArray(clip, rasterOutputPath, format="GTiff", prototype=rasters)
-        czhUtils.gdalnumeric.SaveArray(clip, rastersFilepath, format="GTiff", prototype=rasters)
+        # czhUtils.gdalnumeric.SaveArray(clip, rastersFilepath, format="GTiff", prototype=rasters)
+        # SAVED_IMAGE_FORMAT = SAVED_IMAGE_FORMAT.upper()
+        if self.SAVED_IMAGE_FORMAT == "JPG":
+            czhUtils.gdalnumeric.SaveArray(clip, rastersFilepath, format="JPEG", prototype=rasters)
+        else:
+            czhUtils.gdalnumeric.SaveArray(clip, rastersFilepath, format=self.SAVED_IMAGE_FORMAT, prototype=rasters)
+
         with open(rastersTfwFile,'wt') as TfwFile:
             if geoTran is not None:
                 TfwFile.write("%0.10f\n" % geoTran[1])
@@ -337,7 +365,7 @@ class tiffCropandMerge():
 
         #get images in inputPath
         imgFiles =[]
-        czhUtils.getfilepath(self.inputPath,imgFiles)
+        czhUtils.getfilepath(self.inputPath, imgFiles)
 
         imgFiles_mp = mp.Manager().list()
         for file in natsorted(imgFiles):
@@ -397,6 +425,48 @@ def main():
     # tcmvallabel = tiffCropandMerge("F:\\2019\\NewYorkCity_sidewalks\\\sidewalks\\4.TIF",outputvalLabelDirectory)
     # tcmvallabel.cropImages(256, 256, 0)
 
+
+def img_to_binary(img):
+    col = io.imread(img)
+
+    #     print(col)
+    #     gray = col.convert('1')
+    gray = rgb2gray(col)
+    gray = (gray > 0)
+    gray = gray.astype(np.uint8)
+    print("gray unique values, dtype: ", np.unique(gray), gray.dtype)
+    #     gray = io.fromarray(gray)
+    #     gray = gray.point(lambda x: 0 if x<1 else 1, '1')
+    #     gray = (gray > 0.5).astype(np.int_)
+
+    #     print("gray unique values after, gray.dtype: ", np.unique(gray), gray.dtype)
+
+    return gray
+
+def imgs_to_binary(folder, saved_path):
+
+    files = glob.glob(os.path.join(folder, r'*.tif'))
+    # saved_path = r'J:\Workspace_NJ\J6D11\merged\binary'
+    for file in files:
+        #     file = r'L:\NewYorkCity_sidewalks\COCO\Test256\classified_padding10_432\merge\17.tif'
+        print(file)
+        img = img_to_binary(file)
+        #     img = img_to_binary_pil(file)
+
+        #     plt.imshow(img, cmap=plt.cm.gray)
+        new_name = os.path.join(saved_path, os.path.basename(file)).replace('.tif', '.tif')
+        print(new_name)
+        #     plt.imsave(new_name, img)
+        io.imsave(new_name, img, check_contrast=False)
+
+        newimg = io.imread(new_name)
+        print("newimg unique values: ", np.unique(newimg))
+
+    print("Done.")
+
+
+
+
 if __name__ == "__main__":
     # main()
     # tcmImage= tiffCropandMerge("D:\sidewalk\yolact\Images_data","D:\sidewalk\yolact\Images_data")
@@ -433,11 +503,24 @@ if __name__ == "__main__":
     # tcm.cropImage("F:\\2019\\NewYorkCity_sidewalks\\Images\\0.TIF","test1",913316.0,125170.0,512,512,[1,2,3,4]) #125170-512
     # tcmImage.cropImages_mp(256, 256, 10, Process_cnt=5)
 
-    outputImageDirectory = r'I:\DVRPC\COCO\Label\Test2'
-    if not czhUtils.os.path.exists(outputImageDirectory):
-        czhUtils.os.makedirs(outputImageDirectory)
+    # SAVED_IMAGE_FORMAT = "JPG"
+    intputImageDirectory = r'K:\Dataset\AIRS\val\image'
+    mergedImageDirectory = r'L:\Datasets\AIRS\val\images'
+
+    binaryImageDirectory = r'J:\Workspace_NJ\J6D11\merged'
+
+    if not czhUtils.os.path.exists(mergedImageDirectory):
+        czhUtils.os.makedirs(mergedImageDirectory)
+
+    if not czhUtils.os.path.exists(binaryImageDirectory):
+        czhUtils.os.makedirs(binaryImageDirectory)
     #
-    tcmImage = tiffCropandMerge(r"I:\DVRPC\vector\labels\Selected_500\Test", outputImageDirectory)
-    tcmImage.cropImages_mp(256, 256, 0, Process_cnt=1)
-    # print(tcmImage.inputPath)
+    tcmImage = tiffCropandMerge(intputImageDirectory, mergedImageDirectory)
+
+    tcmImage.SAVED_IMAGE_FORMAT = 'JPG'
+
+    tcmImage.cropImages_mp(1000, 1000, 10, Process_cnt=6)
+    # print(tcmImage.inputPath)mergedImageDirectory
     # tcmImage.mergeImages(tcmImage.inputPath, tcmImage.outputPath, 256, 256, 5000, 5000, 0)
+
+    # imgs_to_binary(mergedImageDirectory, binaryImageDirectory)
