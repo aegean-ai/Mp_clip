@@ -193,6 +193,10 @@ class czhTiff2Json():
 
 
     def createJson(self):
+        '''
+        Creates the COCO-formatted annotation files
+        '''
+
         if self.mode ==1:
             self.createJsonFromShape()
         else:
